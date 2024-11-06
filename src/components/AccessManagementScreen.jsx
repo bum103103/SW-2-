@@ -1,8 +1,77 @@
+// AccessManagementScreen.jsx
 import React, { useState } from 'react';
-import { Smartphone, Bluetooth, Lock, Clock, Building, Plus, Send, History, UserCheck, AlertTriangle } from 'lucide-react';
+import { Smartphone, Bluetooth, Lock, Clock, Building, AlertTriangle } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+
+// 토글 스위치 컴포넌트
+const ToggleSwitch = ({ isOn, onToggle }) => {
+  return (
+    <button 
+      onClick={onToggle}
+      type="button"
+      className={`w-12 h-6 rounded-full relative focus:outline-none transition-colors duration-300
+        ${isOn ? 'bg-teal-400' : 'bg-gray-200'}`}
+    >
+      <div 
+        className={`
+          absolute w-4 h-4 bg-white rounded-full top-1
+          transition-transform duration-300 ease-in-out
+          ${isOn ? 'left-7' : 'left-1'}
+        `}
+      />
+    </button>
+  );
+};
 
 const AccessManagementScreen = () => {
+  const navigate = useNavigate();
   const [selectedTab, setSelectedTab] = useState('current');
+  
+  // 각 출입 수단의 상태 관리
+  const [nfcAccess, setNfcAccess] = useState(false);
+  const [bluetoothAccess, setBluetoothAccess] = useState(false);
+  const [doorlockAccess, setDoorlockAccess] = useState(false);
+  const [duplicateLimit, setDuplicateLimit] = useState(true);
+
+  // 토글 상태 변경 시 서버와 통신하는 함수들
+  const handleNfcToggle = async () => {
+    try {
+      // const response = await fetch('/api/access/nfc', {
+      //   method: 'POST',
+      //   headers: {
+      //     'Content-Type': 'application/json',
+      //   },
+      //   body: JSON.stringify({ enabled: !nfcAccess }),
+      // });
+      // if (response.ok) {
+      //   setNfcAccess(prev => !prev);
+      // }
+      setNfcAccess(prev => !prev);
+      console.log('NFC 상태 변경:', !nfcAccess);
+    } catch (error) {
+      console.error('NFC 토글 에러:', error);
+    }
+  };
+
+  const handleBluetoothToggle = async () => {
+    try {
+      // const response = await fetch('/api/access/bluetooth', { ... });
+      setBluetoothAccess(prev => !prev);
+      console.log('블루투스 상태 변경:', !bluetoothAccess);
+    } catch (error) {
+      console.error('블루투스 토글 에러:', error);
+    }
+  };
+
+  const handleDoorlockToggle = async () => {
+    try {
+      // const response = await fetch('/api/access/doorlock', { ... });
+      setDoorlockAccess(prev => !prev);
+      console.log('도어락 상태 변경:', !doorlockAccess);
+    } catch (error) {
+      console.error('도어락 토글 에러:', error);
+    }
+  };
 
   const currentAccess = [
     {
@@ -24,7 +93,7 @@ const AccessManagementScreen = () => {
   ];
 
   return (
-    <div className="h-screen w-1/2 mx-auto bg-gray-50 flex flex-col">
+    <div className="h-screen w-full max-w-md mx-auto bg-gray-50 flex flex-col">
       {/* 상단 탭 */}
       <div className="bg-white px-4 pt-3 pb-2 border-b">
         <div className="flex gap-1 bg-gray-100 rounded-lg p-1">
@@ -54,18 +123,6 @@ const AccessManagementScreen = () => {
       <div className="flex-1 p-4 overflow-auto">
         {selectedTab === 'current' ? (
           <>
-            {/* 빠른 액션 버튼들 */}
-            <div className="grid grid-cols-2 gap-4 mb-6">
-              <button className="bg-teal-400 text-white p-4 rounded-xl flex flex-col items-center">
-                <Plus className="h-6 w-6 mb-2" />
-                <span className="font-medium">새 출입권한 발급</span>
-              </button>
-              <button className="bg-white border-2 border-teal-400 text-teal-400 p-4 rounded-xl flex flex-col items-center">
-                <UserCheck className="h-6 w-6 mb-2" />
-                <span className="font-medium">허용된 사용자</span>
-              </button>
-            </div>
-
             {/* 출입 수단 관리 */}
             <div className="bg-white rounded-xl p-4 mb-4 shadow-sm">
               <h3 className="font-medium mb-4">출입 수단 설정</h3>
@@ -78,9 +135,10 @@ const AccessManagementScreen = () => {
                       <div className="text-sm text-gray-500">태그하여 출입</div>
                     </div>
                   </div>
-                  <button className="px-3 py-1 bg-teal-400 text-white rounded-full text-sm">
-                    관리
-                  </button>
+                  <ToggleSwitch 
+                    isOn={nfcAccess} 
+                    onToggle={handleNfcToggle}
+                  />
                 </div>
 
                 <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
@@ -91,9 +149,10 @@ const AccessManagementScreen = () => {
                       <div className="text-sm text-gray-500">자동 감지</div>
                     </div>
                   </div>
-                  <button className="px-3 py-1 bg-teal-400 text-white rounded-full text-sm">
-                    설정
-                  </button>
+                  <ToggleSwitch 
+                    isOn={bluetoothAccess}
+                    onToggle={handleBluetoothToggle}
+                  />
                 </div>
 
                 <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
@@ -104,9 +163,10 @@ const AccessManagementScreen = () => {
                       <div className="text-sm text-gray-500">비밀번호 발급</div>
                     </div>
                   </div>
-                  <button className="px-3 py-1 bg-teal-400 text-white rounded-full text-sm">
-                    발급
-                  </button>
+                  <ToggleSwitch 
+                    isOn={doorlockAccess}
+                    onToggle={handleDoorlockToggle}
+                  />
                 </div>
               </div>
             </div>
@@ -127,18 +187,6 @@ const AccessManagementScreen = () => {
                         }`}>
                           {access.status === 'active' ? '활성화' : '만료됨'}
                         </span>
-                      </div>
-                      <div className="flex gap-2">
-                        {access.status === 'active' && (
-                          <>
-                            <button className="p-1 text-blue-500 hover:bg-blue-50 rounded">
-                              <Send className="h-4 w-4" />
-                            </button>
-                            <button className="p-1 text-gray-500 hover:bg-gray-50 rounded">
-                              <History className="h-4 w-4" />
-                            </button>
-                          </>
-                        )}
                       </div>
                     </div>
                     <div className="text-sm text-gray-500 space-y-1">
@@ -165,9 +213,10 @@ const AccessManagementScreen = () => {
                       <div className="text-sm text-gray-500">30분 이내 재발급 제한</div>
                     </div>
                   </div>
-                  <button className="w-12 h-6 bg-teal-400 rounded-full relative">
-                    <div className="w-5 h-5 bg-white rounded-full absolute right-0.5 top-0.5"></div>
-                  </button>
+                  <ToggleSwitch 
+                    isOn={duplicateLimit}
+                    onToggle={() => setDuplicateLimit(prev => !prev)}
+                  />
                 </div>
 
                 <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
