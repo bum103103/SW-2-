@@ -1,0 +1,55 @@
+-- Database 생성
+CREATE DATABASE DeliveryLockApp;
+USE DeliveryLockApp;
+
+-- Users 테이블: 사용자(입주민과 배달기사) 정보를 저장
+CREATE TABLE Users (
+    user_id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    phone VARCHAR(20) UNIQUE,
+    address VARCHAR(255),
+    role ENUM('resident', 'delivery') NOT NULL, -- 사용자 역할: 입주민 또는 배달기사
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Locks 테이블: 도어락 정보 관리
+CREATE TABLE Locks (
+    lock_id INT AUTO_INCREMENT PRIMARY KEY,
+    resident_id INT, -- 입주민과 연결된 도어락
+    lock_key_hash VARCHAR(255) NOT NULL, -- 암호화된 도어락 고유 번호
+    last_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (resident_id) REFERENCES Users(user_id)
+);
+
+-- Deliveries 테이블: 배달 정보 관리
+CREATE TABLE Deliveries (
+    delivery_id INT AUTO_INCREMENT PRIMARY KEY,
+    resident_id INT,
+    delivery_person_id INT,
+    delivery_time TIMESTAMP,
+    status VARCHAR(50), -- 배달 상태 (예: '준비 중', '배달 중', '완료')
+    lock_status BOOLEAN, -- 배달 시 도어락 상태
+    FOREIGN KEY (resident_id) REFERENCES Users(user_id),
+    FOREIGN KEY (delivery_person_id) REFERENCES Users(user_id)
+);
+
+-- AccessLogs 테이블: 도어락 접근 기록
+CREATE TABLE AccessLogs (
+    log_id INT AUTO_INCREMENT PRIMARY KEY,
+    lock_id INT,
+    delivery_id INT,
+    access_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    access_type ENUM('resident', 'delivery'), -- 접근 유형 (입주민 또는 배달기사)
+    access_status ENUM('success', 'failure'), -- 접근 성공 여부
+    FOREIGN KEY (lock_id) REFERENCES Locks(lock_id),
+    FOREIGN KEY (delivery_id) REFERENCES Deliveries(delivery_id)
+);
+
+-- EncryptedKeys 테이블: 배달기사에게 암호화된 도어락 고유 번호 전달용
+CREATE TABLE EncryptedKeys (
+    key_id INT AUTO_INCREMENT PRIMARY KEY,
+    delivery_id INT,
+    encrypted_key VARCHAR(255) NOT NULL, -- 암호화된 도어락 고유 번호
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (delivery_id) REFERENCES Deliveries(delivery_id)
+);
